@@ -35,5 +35,5 @@ ggplot(mapDemoData, aes(long, lat, group = group))+
 
 #Start Playing with the data
 #Graphs needed
-# DemScores vs Corona Cases
+# DemScores vs Corona Casescc
 # Dem scores vds deaths
