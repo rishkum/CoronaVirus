@@ -11,7 +11,9 @@ library(ggpubr)
 dfDemocracy <-  read.csv("democracyIndex.csv") 
 dfLockdown   <- read.csv("lockdownByCountry.csv")
 dfCorona  <-    read.csv("owid-covid-data.csv")
-
+dfTemperature <- read.csv("data/Average_temperature.csv")
+dfMedianAge <- read.csv("data/Median_age.csv")
+dfGdpPPP <- read.csv("data/GDP PPP.csv")
 
 #Visualise the democracy index
 summary(dfDemocracy)
@@ -134,12 +136,35 @@ ggsave(plot = G1.2, filename = "DemoVsCovid.png", device = "png",  path = "Plots
 # What things that matter
 # Regression with dep var: Cases, Death
 # Independent Var: Lock down time, Region, gdp per person, Average Age, Democracy Levels, Temperature?
+colnames(dfMedianAge)[1] <- "Country"
+colnames(dfGdpPPP)[1] <- "Country"
+dfLockdown2 <- left_join(dfLockdown, dfTemperature, by = "Country") %>%
+  left_join(., dfMedianAge, by = "Country") %>% left_join(., dfGdpPPP, by = "Country")
 
-daysPastModel1 <- lm(DaysPast ~ Regimetype, data = dfLockdown)
 
+daysPastModel1 <- lm( final_total_cases_per_million ~ Score+ DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                       `Median.Years.` , data = dfLockdown2)
+
+
+daysPastModel1 <- lm( final_total_deaths_per_million ~  DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                        `Median.Years.` , data = dfLockdown2)
 
 summary(daysPastModel1)
 
+dfLockdown %>% filter(!is.na(Regimetype)) %>% ggplot(., aes(DaysPast, final_total_cases_per_million, color = Regimetype )) + geom_point() +
+  geom_smooth(method="gam",  aes(group=1)) + scale_color_brewer(palette="Accent")+  theme_light() +  labs(title = "Total cases per mil and Democracy levels",
+                        subtitle = "",
+                        x = "Democracy Score",
+                        y = "Total Cases per million",
+                        colour = "Regime Type")
+
+dfLockdown %>% filter(!is.na(Regimetype)) %>% ggplot(., aes(DaysPast, final_total_cases_per_million, color = Regimetype )) + geom_point() +
+  geom_smooth(method="lm", se=F, aes(group=1)) + scale_color_brewer(palette="Accent")+  theme_light() + 
+  labs(title = "Total cases per mil and Democracy levels",
+                         subtitle = "", 
+                         x = "Democracy Score",
+                         y = "Total Cases per million",
+                         colour = "Regime Type")
 
 # Dem scores vs deaths
 # Corona cases vs gdp
