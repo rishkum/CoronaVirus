@@ -3,6 +3,33 @@ library(tidyverse)
 library(wesanderson)
 library(RColorBrewer)
 library(coronavirus)
+library(extrafont)
+loadfonts(device = "mac")
+theme_rk <- function (base_size = 11, base_family = "Avenir", base_line_size = base_size/22, 
+          base_rect_size = base_size/22) 
+  {
+  half_line <- base_size/2
+  theme_grey(base_size = base_size, base_family = base_family, 
+             base_line_size = base_line_size, base_rect_size = base_rect_size) %+replace% 
+    theme(panel.background = element_rect(fill = "white", colour = NA), 
+          panel.border = element_rect(fill = NA, colour = "grey70", size = rel(1)), 
+          panel.grid = element_line(colour = "grey87"), 
+          panel.grid.major = element_line(size = rel(0.5)), 
+          panel.grid.minor = element_line(size = rel(0.25)), 
+          axis.ticks = element_line(colour = "grey70", size = rel(0.5)), 
+          legend.key = element_rect(fill = "white", colour = NA), 
+          strip.background = element_rect(fill = "grey70", 
+                                          colour = NA), 
+          strip.text = element_text(colour = "white", size = rel(0.8), margin = margin(0.8 * half_line, 
+                                                                                       0.8 * half_line, 
+                                                                                       0.8 * half_line,
+                                                                                       0.8 * half_line)), 
+          complete = TRUE,
+          plot.title = element_text(color = "black", size = 13, face = "bold", hjust = 0),
+          plot.subtitle = element_text(color = "dark grey", hjust = 0),
+          plot.caption = element_text(color = "grey79", hjust = 1,   face = "italic"))
+}
+
 
 #For Ggplot arrange
 library(ggpubr)
@@ -106,53 +133,62 @@ ggplot(dfLockdown, aes(DaysPast, final_total_deaths_per_million, label = rowname
 
 #visualising the relationship between democracies and covid cases
 # Graph No. 1 and Graph No 2
-G1 <- ggplot(dfLockdown, aes(Score, final_total_deaths_per_million, color = Regimetype )) + geom_point() +
-  theme_light() + labs(title = "Total Deaths per mil and Democracy levels",
+G1 <- dfLockdown %>% filter(!is.na(Regimetype)) %>% ggplot(., aes(Score, final_total_deaths_per_million, color = Regimetype )) + geom_point() +
+  theme_rk() + labs(title = "Total Deaths per mil and Democracy levels",
                        subtitle = "",
-                       x = "Democracy Score",
+                       x = "Democracy Index",
                        y = "Total Deaths per million",
                        colour = "Regime Type")
 
 
-G2 <- ggplot(dfLockdown, aes(Score, final_total_cases_per_million, color = Regimetype )) + geom_point() +
-  theme_light() +  labs(title = "Total cases per mil and Democracy levels",
+G2 <- dfLockdown %>% filter(!is.na(Regimetype)) %>% ggplot(., aes(Score, final_total_cases_per_million, color = Regimetype )) + geom_point() +
+  theme_rk() +  labs(title = "Total cases per mil and Democracy levels",
                            subtitle = "",
-                           x = "Democracy Score",
+                           x = "Democracy Index",
                            y = "Total Cases per million",
                            colour = "Regime Type")
 
-G1.2 <- ggarrange(G1, G2 , common.legend = TRUE, widths = "1080") 
+G1.2 <- ggarrange(G1, G2 , common.legend = TRUE, widths = 1080) 
 
 #Add a main Title
 G1.2 <- annotate_figure(G1.2, top = text_grob("Are Democracies weak in the time of covid?",
-                                              face = "bold", size = 16), 
+                                              face = "bold", size = 16, hjust =.70), 
                         bottom = text_grob("Sources: The Economist, Ocid Data",
                                            face = "italic", size = 9))
 
 #Save it
 ggsave(plot = G1.2, filename = "DemoVsCovid.png", device = "png",  path = "Plots/")
-
+library(ggpubr)
 library(ggpmisc)
+f1 <- (DaysPast ~ Score)
+
 # Do democracies implement lockdown quicker 
-dfLockdown %>% filter(!is.na(Regimetype)) %>% ggplot(., aes(Score, DaysPast, color = Regimetype )) + geom_point() +
-  geom_smooth(method="lm",  aes(group=1)) + scale_color_brewer(palette="Set1") +
-  theme_light() + 
-  stat_poly_eq(formula = DaysPast ~ Score,
-               eq.with.lhs = "italic(hat(y))~`=`~",
-               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               parse = TRUE) + 
-  labs(title = "Do democracies implement lockdown quicker?",
-                        subtitle = "",
-                        y = "No of days to lockdown after 1st case ",
-                        x = "Democracy Level",
+plot.lockdown.implementation <-  dfLockdown %>% filter(!is.na(Regimetype)) %>% ggplot(., aes( y =Score, DaysPast, color = Regimetype )) + geom_point() +
+  geom_smooth(method="lm", formula = y~x, aes(group=1)) + scale_color_brewer(palette="Set1") +
+  theme_rk()+
+  stat_cor(aes(group = 1), cor.coef.name = "R", label.x.npc = 0.75, 
+           label.y.npc = 0.01, hjust = 0 ) +
+  labs(title = "Did democracies took too much time in implementing lockdown?",element_text(colour = "#FFFF"),
+                        subtitle = paste("\nDemocracies index on y axis and number of days countries took to impose some kind of lockdown\non y axis. Even though there is some positive relationship among these variables, this relationship \nis weak and statistically insignificant.\n"),
+                        x = "No of days to lockdown after 1st case \n",
+                        y = "Democracy Index ",
+       caption = "\nSee github/rishkum/coronavirus for datasets ",
                         colour = "Regime Type")
 
-dfLockdown %>% filter(!is.na(Regimetype)) %>% ggplot(., aes(DaysPast, final_total_cases_per_million, color = Regimetype )) + geom_point() +
-  geom_smooth(method="lm", se=F, aes(group=1)) + scale_color_brewer(palette="Accent")+  theme_light() + 
-  labs(title = "Total cases per mil and Democracy levels",
-       subtitle = "", 
+
+
+
+
+plot.lockdown.cases.effects <-   dfLockdown %>% filter(!is.na(Regimetype)) %>% ggplot(., aes(DaysPast, final_total_cases_per_million, color = Regimetype )) + geom_point() +
+  geom_smooth(method="lm", se=F, aes(group=1)) + scale_color_brewer(palette="Accent")+  theme_rk() + 
+  stat_cor(aes(group = 1), cor.coef.name = "R", label.x.npc = 0.75, 
+           label.y.npc = 0.01, hjust = 0 ) +
+  labs(title = "A stich in time saves nine? ",
+       subtitle = "Total cases per million are seen to be higher in countires that impose lockdown quickly. \nThe correlation is positive but weak as there are countries who imposed the
+lockdown later but still had lower cases.\n", 
        x = "No of days to lockdown after 1st case ",
        y = "Total Cases per million",
+       caption = "\nSee github/rishkum/coronavirus for datasets",
        colour = "Regime Type")
 
 ############ Modelling ################
@@ -176,7 +212,12 @@ summary(daysPastModel1)
 vif(daysPastModel1)
 
 
-daysPastModel1 <- lm( final_total_cases_per_million ~ Score , data = dfLockdown2)
+M.total.cases.just.score <- lm( final_total_cases_per_million ~ Score , data = dfLockdown2)
+ggcoef(
+  daysPastModel1, exponentiate = F, exclude_intercept = TRUE,
+  color = "blue", sort = "ascending", conf.level = .95, 
+) + theme_rk()
+
 daysPastModel1 <- lm( final_total_cases_per_million ~ Score + DaysPast , data = dfLockdown2)
 daysPastModel1 <- lm( final_total_cases_per_million ~ Score + DaysPast + `Int.`   , data = dfLockdown2)
 daysPastModel1 <- lm( final_total_cases_per_million ~ Score  + `Median.Years.`   , data = dfLockdown2)
