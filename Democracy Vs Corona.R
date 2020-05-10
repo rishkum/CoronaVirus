@@ -132,6 +132,29 @@ G1.2 <- annotate_figure(G1.2, top = text_grob("Are Democracies weak in the time 
 #Save it
 ggsave(plot = G1.2, filename = "DemoVsCovid.png", device = "png",  path = "Plots/")
 
+library(ggpmisc)
+# Do democracies implement lockdown quicker 
+dfLockdown %>% filter(!is.na(Regimetype)) %>% ggplot(., aes(Score, DaysPast, color = Regimetype )) + geom_point() +
+  geom_smooth(method="lm",  aes(group=1)) + scale_color_brewer(palette="Set1") +
+  theme_light() + 
+  stat_poly_eq(formula = DaysPast ~ Score,
+               eq.with.lhs = "italic(hat(y))~`=`~",
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               parse = TRUE) + 
+  labs(title = "Do democracies implement lockdown quicker?",
+                        subtitle = "",
+                        y = "No of days to lockdown after 1st case ",
+                        x = "Democracy Level",
+                        colour = "Regime Type")
+
+dfLockdown %>% filter(!is.na(Regimetype)) %>% ggplot(., aes(DaysPast, final_total_cases_per_million, color = Regimetype )) + geom_point() +
+  geom_smooth(method="lm", se=F, aes(group=1)) + scale_color_brewer(palette="Accent")+  theme_light() + 
+  labs(title = "Total cases per mil and Democracy levels",
+       subtitle = "", 
+       x = "No of days to lockdown after 1st case ",
+       y = "Total Cases per million",
+       colour = "Regime Type")
+
 ############ Modelling ################
 # What things that matter
 # Regression with dep var: Cases, Death
@@ -143,12 +166,61 @@ dfLockdown2 <- left_join(dfLockdown, dfTemperature, by = "Country") %>%
 
 dfLockdown2$Int. <- as.numeric(dfLockdown2$Int)
 dfLockdown2$Average.yearly.temperature..1961.1990..degrees.Celsius. <- as.numeric(dfLockdown2$Average.yearly.temperature..1961.1990..degrees.Celsius.)
-daysPastModel1 <- lm( final_total_cases_per_million ~ Score+ DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                       `Median.Years.` + Int. , data = dfLockdown2)
 
 
-daysPastModel1 <- lm( final_total_deaths_per_million ~ Score + DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                        `Median.Years.` + Int., data = dfLockdown2)
+
+daysPastModel1 <- lm( final_total_cases_per_million ~ Score + DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                        `Median.Years.` + Int. + Score:DaysPast , data = dfLockdown2)
+
+summary(daysPastModel1)
+vif(daysPastModel1)
+
+
+daysPastModel1 <- lm( final_total_cases_per_million ~ Score , data = dfLockdown2)
+daysPastModel1 <- lm( final_total_cases_per_million ~ Score + DaysPast , data = dfLockdown2)
+daysPastModel1 <- lm( final_total_cases_per_million ~ Score + DaysPast + `Int.`   , data = dfLockdown2)
+daysPastModel1 <- lm( final_total_cases_per_million ~ Score  + `Median.Years.`   , data = dfLockdown2)
+
+daysPastModel1 <- lm( final_total_cases_per_million ~ Score  + `Median.Years.` +  `Int.` +
+                        `Average.yearly.temperature..1961.1990..degrees.Celsius.`, data = dfLockdown2)
+
+daysPastModel1 <- lm( final_total_cases_per_million ~ Score  + `Median.Years.` +  `Int.` +
+                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                        Score:`Median.Years.` +
+                        DaysPast, data = dfLockdown2)
+
+daysPastModel1 <- lm( final_total_cases_per_million ~ Score  + `Median.Years.` +  
+                        `Int.` + 
+                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                          Score:`Median.Years.` + Score:DaysPast +
+                        DaysPast, data = dfLockdown2)
+
+
+daysPastModel1 <- lm( final_total_cases_per_million ~ Score  + `Median.Years.` +  
+                        `Int.` + I(`Median.Years.`^2 )+
+                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                        DaysPast, data = dfLockdown2)
+summary(daysPastModel1)
+vif(daysPastModel1)
+
+
+summary(daysPastModel1)
+vif(daysPastModel1)
+
+summary(daysPastModel1)
+vif(daysPastModel1)
+
+
+
+
+
+
+daysPastModel1 <- lm( final_total_deaths_per_million ~ Regimetype + DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                        `Median.Years.` + Int. + Regimetype:DaysPast , data = dfLockdown2)
+
+daysPastModel1 <- lm( final_total_deaths_per_million ~ Regimetype + DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                        `Median.Years.`  + Regimetype:DaysPast , data = dfLockdown2)
+
 
 daysPastModel1 <- lm( final_total_cases_per_million ~  DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
                         `Median.Years.` + `Int.` , data = dfLockdown2)
@@ -160,6 +232,36 @@ daysPastModel2 <- lm( final_total_cases_per_million ~ Regimetype+ DaysPast +`Ave
 
 library("arm")
 a <- coefplot(daysPastModel1, xlim=c(-2, 10), col.pts="red",  intercept=F)
+
+daysPastModel1 <- lm( final_total_cases_per_million ~ Score  + `Median.Years.` +  `Int.` +
+                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                        Score:`Median.Years.` +
+                        DaysPast, data = dfLockdown2)
+dfLockdown3 <- dfLockdown2 
+dfLockdown3$Score <- dfLockdown3$Score * 10
+#dfLockdown3$Median.Years. <- dfLockdown3$Median.Years. / 10
+summary(daysPastModel1)
+
+
+
+daysPastModel1 <- lm( final_total_cases_per_million ~ Score  + `Median.Years.` +  `Int.` +
+                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                        Score:`Median.Years.` +
+                        DaysPast, data = dfLockdown3)
+daysPastModel1 <- lm( final_total_cases_per_million ~ Score   +  `Int.` +
+                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                        Score:`Median.Years.` +
+                        DaysPast, data = dfLockdown3)
+
+daysPastModel1 <- lm( final_total_cases_per_million ~ Score   +  `Int.` + `Median.Years.`+
+                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                        Score:`Median.Years.` +
+                        DaysPast, data = dfLockdown3)
+daysPastModel1 <- lm( final_total_cases_per_million ~ Score   +  `Int.` + `Median.Years.`+
+                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                        Score:`Median.Years.` +
+                        DaysPast, data = dfLockdown3)
+dfLockdown3$continents
 
 library(GGally)
 ggcoef(
@@ -215,20 +317,7 @@ coeft
 
 summary(daysPastModel1)
 results
-dfLockdown %>% filter(!is.na(Regimetype)) %>% ggplot(., aes(DaysPast, final_total_cases_per_million, color = Regimetype )) + geom_point() +
-  geom_smooth(method="gam",  aes(group=1)) + scale_color_brewer(palette="Accent")+  theme_light() +  labs(title = "Total cases per mil and Democracy levels",
-                        subtitle = "",
-                        x = "Democracy Score",
-                        y = "Total Cases per million",
-                        colour = "Regime Type")
 
-dfLockdown %>% filter(!is.na(Regimetype)) %>% ggplot(., aes(DaysPast, final_total_cases_per_million, color = Regimetype )) + geom_point() +
-  geom_smooth(method="lm", se=F, aes(group=1)) + scale_color_brewer(palette="Accent")+  theme_light() + 
-  labs(title = "Total cases per mil and Democracy levels",
-                         subtitle = "", 
-                         x = "Democracy Score",
-                         y = "Total Cases per million",
-                         colour = "Regime Type")
 
 
 
