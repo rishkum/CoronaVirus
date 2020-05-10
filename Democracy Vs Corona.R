@@ -211,12 +211,53 @@ daysPastModel1 <- lm( final_total_cases_per_million ~ Score + DaysPast +`Average
 summary(daysPastModel1)
 vif(daysPastModel1)
 
-
-M.total.cases.just.score <- lm( final_total_cases_per_million ~ Score , data = dfLockdown2)
-ggcoef(
-  daysPastModel1, exponentiate = F, exclude_intercept = TRUE,
+#USE this
+M.total.cases.just.score <- lm( final_total_cases_per_million ~ Score , data = dfLockdown3)
+plot.M.total.cases.just.score <- ggcoef(
+  final_total_cases_per_million, exponentiate = F, exclude_intercept = TRUE,
   color = "blue", sort = "ascending", conf.level = .95, 
 ) + theme_rk()
+
+M.total.cases.just.everything <- lm( final_total_cases_per_million ~ Score  + `Median.Years.` +  
+                        `Int.` +
+                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                        DaysPast + `Median.Years.`:Score, data = dfLockdown3)
+
+plot.M.total.cases.just.everything <- ggcoef(
+  M.total.cases.just.everything, exponentiate = F, exclude_intercept = TRUE,
+  color = "blue", sort = "ascending", conf.level = .95, 
+) + theme_rk()
+
+library(coefplot)
+ multiplot(M.total.cases.just.everything,
+                        M.total.cases.just.score, intercept = F ,title = "In a complex world just by being a democracy does not mean higher cases ",
+           horizontal = T, sort = "magnitude",alpha = .05, xlab = "No of COVID 19 cases",
+           newNames = c(M.total.cases.just.everything = "With Controls",
+             `Median.Years.` = "Median\n Years",
+                                  `Int.` = "GDP \nPer \nperson",
+                                  `Average.yearly.temperature..1961.1990..degrees.Celsius.` = "Average \nTemperature",
+                                  `Score` = "Democracy \nIndex"    , 
+                                  `Score:Median.Years.` = "Interaction\n Median\n Age:Democracy \nIndex"  ,  
+                                  DaysPast = "No of days \nto lockdown \npost 1st case")) + theme_rk() +
+          theme(legend.position = "top") + coord_cartesian(xlim = c(-300, 100)) + coord_flip() + 
+   scale_color_manual(values=c("pink","light blue"), labels = c("With Controls", "Just Democracy \nIndex")) +
+   labs(subtitle = "\nTotal cases per million are seen to be higher in countires that impose lockdown quickly. \nThe correlation is positive but weak as there are countries who imposed the
+lockdown later but still had lower cases.\n", 
+        caption = "\nSee github/rishkum/coronavirus for datasets")
+
+
+names(plot.M.total.cases.just.score)
+names(plot.M.total.cases.just.everything)
+
+mList <- list(plot.M.total.cases.just.score,plot.M.total.cases.just.everything)
+est <- sapply(mList,"[[","d.avg")
+lwr <- sapply(mList,function(x) x$d.avg.ci[1])
+upr <- sapply(mList,function(x) x$d.avg.ci[2])
+library(plotrix)
+plotCI(1:3,est,ui=upr,li=lwr,axes=FALSE)
+axis(side=2)
+axis(side=1,at=1:3,labels=c("plot.M.total.cases.just.score","plot.M.total.cases.just.everything"))
+
 
 daysPastModel1 <- lm( final_total_cases_per_million ~ Score + DaysPast , data = dfLockdown2)
 daysPastModel1 <- lm( final_total_cases_per_million ~ Score + DaysPast + `Int.`   , data = dfLockdown2)
