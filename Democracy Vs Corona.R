@@ -137,20 +137,84 @@ ggsave(plot = G1.2, filename = "DemoVsCovid.png", device = "png",  path = "Plots
 # Regression with dep var: Cases, Death
 # Independent Var: Lock down time, Region, gdp per person, Average Age, Democracy Levels, Temperature?
 colnames(dfMedianAge)[1] <- "Country"
-colnames(dfGdpPPP)[1] <- "Country"
+colnames(dfGdpPPP)[2] <- "Country"
 dfLockdown2 <- left_join(dfLockdown, dfTemperature, by = "Country") %>%
   left_join(., dfMedianAge, by = "Country") %>% left_join(., dfGdpPPP, by = "Country")
 
-
+dfLockdown2$Int. <- as.numeric(dfLockdown2$Int)
+dfLockdown2$Average.yearly.temperature..1961.1990..degrees.Celsius. <- as.numeric(dfLockdown2$Average.yearly.temperature..1961.1990..degrees.Celsius.)
 daysPastModel1 <- lm( final_total_cases_per_million ~ Score+ DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                       `Median.Years.` , data = dfLockdown2)
+                       `Median.Years.` + Int. , data = dfLockdown2)
 
 
-daysPastModel1 <- lm( final_total_deaths_per_million ~  DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                        `Median.Years.` , data = dfLockdown2)
+daysPastModel1 <- lm( final_total_deaths_per_million ~ Score + DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                        `Median.Years.` + Int., data = dfLockdown2)
+
+daysPastModel1 <- lm( final_total_cases_per_million ~  DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                        `Median.Years.` + `Int.` , data = dfLockdown2)
+
+
+daysPastModel2 <- lm( final_total_cases_per_million ~ Regimetype+ DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                        `Median.Years.` + `Int.` + `Int.`:Regimetype, data = dfLockdown2)
+
+
+library("arm")
+a <- coefplot(daysPastModel1, xlim=c(-2, 10), col.pts="red",  intercept=F)
+
+library(GGally)
+ggcoef(
+  daysPastModel1, exponentiate = F, exclude_intercept = TRUE,
+   color = "blue", sort = "ascending", conf.level = .95, 
+) + theme_light()
+
+
+
+corr(dfLockdown2$Score, dfLockdown2$final_total_cases_per_million, )
+
+
+cor(dfLockdown2$Score, dfLockdown2$final_total_cases_per_million,
+    method = c("pearson", "kendall", "spearman"), use = "pairwise")
+
+
+cor.test(dfLockdown2$Score, dfLockdown2$final_total_cases_per_million,
+    method = c("pearson", "kendall", "spearman"), use = "pairwise")
+
+
+cor(dfLockdown2$Median.Years., dfLockdown2$final_total_cases_per_million,
+    method = c("pearson", "kendall", "spearman"), use = "pairwise")
+
+
+cor.test(dfLockdown2$Median.Years., dfLockdown2$final_total_cases_per_million,
+         method = c("pearson", "kendall", "spearman"), use = "pairwise")
+
+library(simpleboot)
+## Resample residuals
+lboot2 <- lm.boot(daysPastModel1, R = 1000, rows = FALSE)
+lboot2 <- summary(lboot2)
+lboot2
+
+bs <- function(formula, data, indices) {
+  d <- data[indices,] # allows boot to select sample 
+  fit <- lm(formula, data=d)
+  return(coef(fit)) 
+}
+library(boot)
+results <- boot(data=dfLockdown2, statistic=bs, 
+                R=1000, formula=final_total_cases_per_million ~  DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
+                  `Median.Years.` + `Int.`)
+
+
+
+
+boot.ci(results, type="bca", index=1) # intercept 
+boot.ci(results, type="bca", index=2) # wt 
+boot.ci(results, type="bca", index=5) # disp
+
+
+coeft
 
 summary(daysPastModel1)
-
+results
 dfLockdown %>% filter(!is.na(Regimetype)) %>% ggplot(., aes(DaysPast, final_total_cases_per_million, color = Regimetype )) + geom_point() +
   geom_smooth(method="gam",  aes(group=1)) + scale_color_brewer(palette="Accent")+  theme_light() +  labs(title = "Total cases per mil and Democracy levels",
                         subtitle = "",
@@ -165,6 +229,9 @@ dfLockdown %>% filter(!is.na(Regimetype)) %>% ggplot(., aes(DaysPast, final_tota
                          x = "Democracy Score",
                          y = "Total Cases per million",
                          colour = "Regime Type")
+
+
+
 
 # Dem scores vs deaths
 # Corona cases vs gdp
