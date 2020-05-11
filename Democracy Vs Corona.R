@@ -7,8 +7,8 @@ library(extrafont)
 loadfonts(device = "mac")
 theme_rk <- function (base_size = 11, base_family = "Avenir", base_line_size = base_size/22, 
           base_rect_size = base_size/22) 
-  {
-  half_line <- base_size/2
+  
+  {half_line <- base_size/2
   theme_grey(base_size = base_size, base_family = base_family, 
              base_line_size = base_line_size, base_rect_size = base_rect_size) %+replace% 
     theme(panel.background = element_rect(fill = "white", colour = NA), 
@@ -27,6 +27,7 @@ theme_rk <- function (base_size = 11, base_family = "Avenir", base_line_size = b
           complete = TRUE,
           plot.title = element_text(color = "black", size = 13, face = "bold", hjust = 0),
           plot.subtitle = element_text(color = "dark grey", hjust = 0),
+          plot.title.position = "plot", 
           plot.caption = element_text(color = "grey79", hjust = 1,   face = "italic"))
 }
 
@@ -211,13 +212,15 @@ daysPastModel1 <- lm( final_total_cases_per_million ~ Score + DaysPast +`Average
 summary(daysPastModel1)
 vif(daysPastModel1)
 
-#USE this
+#USE this model for the short version
 M.total.cases.just.score <- lm( final_total_cases_per_million ~ Score , data = dfLockdown3)
 plot.M.total.cases.just.score <- ggcoef(
   final_total_cases_per_million, exponentiate = F, exclude_intercept = TRUE,
   color = "blue", sort = "ascending", conf.level = .95, 
 ) + theme_rk()
 
+
+#Model for the long version
 M.total.cases.just.everything <- lm( final_total_cases_per_million ~ Score  + `Median.Years.` +  
                         `Int.` +
                         `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
@@ -228,10 +231,12 @@ plot.M.total.cases.just.everything <- ggcoef(
   color = "blue", sort = "ascending", conf.level = .95, 
 ) + theme_rk()
 
+
+#Creating the Multi plot
 library(coefplot)
  multiplot(M.total.cases.just.everything,
                         M.total.cases.just.score, intercept = F ,title = "In a complex world just by being a democracy does not mean higher cases ",
-           horizontal = T, sort = "magnitude",alpha = .05, xlab = "No of COVID 19 cases",
+           horizontal = T, sort = "magnitude",alpha = .05, xlab = "No of COVID-19 cases",
            newNames = c(M.total.cases.just.everything = "With Controls",
              `Median.Years.` = "Median\n Years",
                                   `Int.` = "GDP \nPer \nperson",
@@ -239,166 +244,14 @@ library(coefplot)
                                   `Score` = "Democracy \nIndex"    , 
                                   `Score:Median.Years.` = "Interaction\n Median\n Age:Democracy \nIndex"  ,  
                                   DaysPast = "No of days \nto lockdown \npost 1st case")) + theme_rk() +
-          theme(legend.position = "top") + coord_cartesian(xlim = c(-300, 100)) + coord_flip() + 
+          theme(legend.position = "top") + coord_cartesian(xlim = c(-300, 150)) + coord_flip() + 
    scale_color_manual(values=c("pink","light blue"), labels = c("With Controls", "Just Democracy \nIndex")) +
-   labs(subtitle = "\nTotal cases per million are seen to be higher in countires that impose lockdown quickly. \nThe correlation is positive but weak as there are countries who imposed the
-lockdown later but still had lower cases.\n", 
-        caption = "\nSee github/rishkum/coronavirus for datasets")
-
-
-names(plot.M.total.cases.just.score)
-names(plot.M.total.cases.just.everything)
-
-mList <- list(plot.M.total.cases.just.score,plot.M.total.cases.just.everything)
-est <- sapply(mList,"[[","d.avg")
-lwr <- sapply(mList,function(x) x$d.avg.ci[1])
-upr <- sapply(mList,function(x) x$d.avg.ci[2])
-library(plotrix)
-plotCI(1:3,est,ui=upr,li=lwr,axes=FALSE)
-axis(side=2)
-axis(side=1,at=1:3,labels=c("plot.M.total.cases.just.score","plot.M.total.cases.just.everything"))
-
-
-daysPastModel1 <- lm( final_total_cases_per_million ~ Score + DaysPast , data = dfLockdown2)
-daysPastModel1 <- lm( final_total_cases_per_million ~ Score + DaysPast + `Int.`   , data = dfLockdown2)
-daysPastModel1 <- lm( final_total_cases_per_million ~ Score  + `Median.Years.`   , data = dfLockdown2)
-
-daysPastModel1 <- lm( final_total_cases_per_million ~ Score  + `Median.Years.` +  `Int.` +
-                        `Average.yearly.temperature..1961.1990..degrees.Celsius.`, data = dfLockdown2)
-
-daysPastModel1 <- lm( final_total_cases_per_million ~ Score  + `Median.Years.` +  `Int.` +
-                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                        Score:`Median.Years.` +
-                        DaysPast, data = dfLockdown2)
-
-daysPastModel1 <- lm( final_total_cases_per_million ~ Score  + `Median.Years.` +  
-                        `Int.` + 
-                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                          Score:`Median.Years.` + Score:DaysPast +
-                        DaysPast, data = dfLockdown2)
-
-
-daysPastModel1 <- lm( final_total_cases_per_million ~ Score  + `Median.Years.` +  
-                        `Int.` + I(`Median.Years.`^2 )+
-                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                        DaysPast, data = dfLockdown2)
-summary(daysPastModel1)
-vif(daysPastModel1)
-
-
-summary(daysPastModel1)
-vif(daysPastModel1)
-
-summary(daysPastModel1)
-vif(daysPastModel1)
-
-
-
-
-
-
-daysPastModel1 <- lm( final_total_deaths_per_million ~ Regimetype + DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                        `Median.Years.` + Int. + Regimetype:DaysPast , data = dfLockdown2)
-
-daysPastModel1 <- lm( final_total_deaths_per_million ~ Regimetype + DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                        `Median.Years.`  + Regimetype:DaysPast , data = dfLockdown2)
-
-
-daysPastModel1 <- lm( final_total_cases_per_million ~  DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                        `Median.Years.` + `Int.` , data = dfLockdown2)
-
-
-daysPastModel2 <- lm( final_total_cases_per_million ~ Regimetype+ DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                        `Median.Years.` + `Int.` + `Int.`:Regimetype, data = dfLockdown2)
-
-
-library("arm")
-a <- coefplot(daysPastModel1, xlim=c(-2, 10), col.pts="red",  intercept=F)
-
-daysPastModel1 <- lm( final_total_cases_per_million ~ Score  + `Median.Years.` +  `Int.` +
-                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                        Score:`Median.Years.` +
-                        DaysPast, data = dfLockdown2)
-dfLockdown3 <- dfLockdown2 
-dfLockdown3$Score <- dfLockdown3$Score * 10
-#dfLockdown3$Median.Years. <- dfLockdown3$Median.Years. / 10
-summary(daysPastModel1)
-
-
-
-daysPastModel1 <- lm( final_total_cases_per_million ~ Score  + `Median.Years.` +  `Int.` +
-                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                        Score:`Median.Years.` +
-                        DaysPast, data = dfLockdown3)
-daysPastModel1 <- lm( final_total_cases_per_million ~ Score   +  `Int.` +
-                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                        Score:`Median.Years.` +
-                        DaysPast, data = dfLockdown3)
-
-daysPastModel1 <- lm( final_total_cases_per_million ~ Score   +  `Int.` + `Median.Years.`+
-                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                        Score:`Median.Years.` +
-                        DaysPast, data = dfLockdown3)
-daysPastModel1 <- lm( final_total_cases_per_million ~ Score   +  `Int.` + `Median.Years.`+
-                        `Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                        Score:`Median.Years.` +
-                        DaysPast, data = dfLockdown3)
-dfLockdown3$continents
-
-library(GGally)
-ggcoef(
-  daysPastModel1, exponentiate = F, exclude_intercept = TRUE,
-   color = "blue", sort = "ascending", conf.level = .95, 
-) + theme_light()
-
-
-
-corr(dfLockdown2$Score, dfLockdown2$final_total_cases_per_million, )
-
-
-cor(dfLockdown2$Score, dfLockdown2$final_total_cases_per_million,
-    method = c("pearson", "kendall", "spearman"), use = "pairwise")
-
-
-cor.test(dfLockdown2$Score, dfLockdown2$final_total_cases_per_million,
-    method = c("pearson", "kendall", "spearman"), use = "pairwise")
-
-
-cor(dfLockdown2$Median.Years., dfLockdown2$final_total_cases_per_million,
-    method = c("pearson", "kendall", "spearman"), use = "pairwise")
-
-
-cor.test(dfLockdown2$Median.Years., dfLockdown2$final_total_cases_per_million,
-         method = c("pearson", "kendall", "spearman"), use = "pairwise")
-
-library(simpleboot)
-## Resample residuals
-lboot2 <- lm.boot(daysPastModel1, R = 1000, rows = FALSE)
-lboot2 <- summary(lboot2)
-lboot2
-
-bs <- function(formula, data, indices) {
-  d <- data[indices,] # allows boot to select sample 
-  fit <- lm(formula, data=d)
-  return(coef(fit)) 
-}
-library(boot)
-results <- boot(data=dfLockdown2, statistic=bs, 
-                R=1000, formula=final_total_cases_per_million ~  DaysPast +`Average.yearly.temperature..1961.1990..degrees.Celsius.` +
-                  `Median.Years.` + `Int.`)
-
-
-
-
-boot.ci(results, type="bca", index=1) # intercept 
-boot.ci(results, type="bca", index=2) # wt 
-boot.ci(results, type="bca", index=5) # disp
-
-
-coeft
-
-summary(daysPastModel1)
-results
+   labs(subtitle = str_c("\nCovid cases per million and democratic index has a positive relationship but this dies down\n"
+                          ,"when other factors are considered. When we consider the interaction between democratic \n",
+                          "index and median years then a positive statistically significant effect is found. This implies\n", 
+                         "that cases are higher if you in are a democratic nation with older population.\n" ),
+        caption = "\nSee github/rishkum/coronavirus for datasets",
+        y = "Predicting Variables")
 
 
 
