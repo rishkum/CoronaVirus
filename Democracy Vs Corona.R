@@ -5,6 +5,8 @@ library(RColorBrewer)
 library(coronavirus)
 library(extrafont)
 loadfonts(device = "mac")
+
+#Creating a theme for charts
 theme_rk <- function (base_size = 11, base_family = "Avenir", base_line_size = base_size/22, 
           base_rect_size = base_size/22) 
   
