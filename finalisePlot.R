@@ -17,7 +17,7 @@ generate_footer <- function (source_name, logo_image_path) {
   #Make the footer
   footer <- grid::grobTree(grid::linesGrob(x = grid::unit(c(0, 1), "npc"), y = grid::unit(1.1, "npc")),
                            grid::textGrob(source_name,
-                                          x = 0.004, hjust = 0, gp = grid::gpar(fontsize=12)),
+                                          x = 0.004, hjust = 0, gp = grid::gpar(fontsize=9)),
                            grid::rasterGrob(png::readPNG(logo_image_path), x = 0.944))
   return(footer)
   
@@ -52,7 +52,7 @@ finalise_plot <- function(plot_name,
                           save_filepath=file.path(Sys.getenv("TMPDIR"), "tmp-nc.png"),
                           width_pixels=640,
                           height_pixels=450,
-                          logo_image_path = file.path(system.file("data", package = 'bbplot'),"placeholder.png")) {
+                          logo_image_path = file.path(system.file("data", package = 'viz'),"placeholder.png")) {
   
   footer <- generate_footer(source_name, logo_image_path)
   

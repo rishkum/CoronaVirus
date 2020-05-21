@@ -1,0 +1,133 @@
+---
+title: "Dectech Visualisation Cookbook"
+author: "Rishabh Kumar"
+date: "20/05/2020"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: true
+    theme: cosmo
+    
+---
+
+```{r setup, include=FALSE, echo=TRUE, warning=FALSE}
+library(gap)
+pacman::p_load('dplyr', 'tidyr', 'gapminder',
+               'ggplot2',  'ggalt',
+               'forcats', 'R.utils', 'png', 
+               'grid', 'ggpubr', 'scales',
+               'bbplot', 'knitr', 'pander')
+options(scipen = 999)
+```
+
+## How to create Dectech style visualisations
+
+We have developed an R package and an R cookbook to make the process of creating publication-ready visualisations in our in-house style using R's ggplot2 library a more reproducible process, as well as making it prettier and easier for people new to R to create graphics. 
+
+The cookbook below should hopefully help anyone who wants to make graphics like these: 
+  
+
+Before we start **let's get the admin out of the way first...**
+
+### Load all the libraries you need
+
+A few of the steps in this cookbook - and to create charts in R in general - require certain packages to be installed and loaded. So that you do not have to install and load them one by one, you can use the `p_load` function in the `pacman` package to load them all at once with the following code. 
+
+```{r eval=FALSE}
+#This line of code installs the pacman page if you do not have it installed - if you do, it simply loads the package
+if(!require(pacman))install.packages("pacman")
+pacman::p_load('dplyr', 'tidyr', 'gapminder',
+               'ggplot2',  'ggalt',
+               'forcats', 'R.utils', 'png', 
+               'grid', 'ggpubr', 'scales',
+               'bbplot')
+```
+
+### Install the bbplot package
+
+`dectechViz` is not on CRAN, so you will have to install it directly from Github using `devtools`. 
+
+If you do not have the `devtools` package installed, you will have to run the first line in the code below as well. 
+
+``` {r eval = FALSE}
+# install.packages('devtools')
+devtools::install_github('rishkum/dectechViz')
+```
+
+For more info on `dectechViz` check out the [package's Github repo](https://github.com/Rishkum/dectechviz), but most of the details about how to use the package and its functions are detailed below. 
+
+When you have downloaded the package and successfully installed it you are good to go and create charts. 
+
+### How does the bbplot package work?
+
+The package has two functions, `clean_theme()`, `finalise_plot()`,`scale_color_dectech()`, `dectech_pal()`, `pal_color`, `gg_check()`
+
+`clean_theme()`: has multiple arguments arguments 
+
+What it does is generally makes text size, font and colour, axis lines, axis text, margins and many other standard chart components into clean style, which has been formulated based on recommendations and feedback from the designers.
+
+See this function as a cleaner function for your plot. So if you want to add more layers like an vertical, or annotation like you should add them after storing the results of the function. 
+
+The code below shows how the `bbc_style()` should be used within standard chart-production workflow. This is an example for a very simple line chart, using data from the `gapminder` package.
+
+```{r message = FALSE, warning = FALSE}
+#Data for chart from gapminder package
+line_df <- gapminder %>%
+  filter(country == "Malawi") 
+#Make plot
+line <- ggplot(line_df, aes(x = year, y = lifeExp)) +
+  geom_line(colour = "#1380A1", size = 1) +
+  geom_hline(yintercept = 0, size = 1, colour="#333333") +
+  bbc_style() +
+  labs(title="Living longer",
+       subtitle = "Life expectancy in Malawi 1952-2007")
+```
+
+```{r echo=FALSE, warning = FALSE, message = FALSE}
+plot(line)
+```
+
+Here is what the `bbc_style()` function actually does under the hood. It essentially modifies certain arguments in the `theme` function of `ggplot2`.
+
+For example, the first argument  is setting the font, size, typeface and colour of the title element of the plot.
+
+```{r echo=FALSE}
+bbplot::bbc_style
+```
+
+## creating a bar plot
+
+
+
+
+## creating a bar plot with different colors for significance levels
+
+
+
+
+## creating a scatter plot
+
+
+
+
+## creating a heatmap table
+
+
+
+
+## creating a line chart
+
+
+
+
+## creating a waterfall chart or a dumbell on
+
+
+
+
+## Crating a histogram
+
+
+
+## Finalise Plot
