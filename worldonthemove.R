@@ -73,7 +73,7 @@ gdata <- gdata %>% mutate(transportation_type = recode(move_to,
                                                        'parks_percent_change_from_baseline'       = 'Parks',
                                                          'residential_percent_change_from_baseline' = 'Home'))
 
-####### 1. Are people traveling more and then what ways? - Apple Mobility Data #########
+####### 1. Are people traveling more and then in what ways? - Apple Mobility Data #########
 
 # 1. Checking for UK ###########
 
@@ -112,7 +112,7 @@ finalise_plot(p.tvl.uk, source_name = "Source: Apple Mobility Dataset",
               logo_image_path = "Data/logo/rk_logo.png")
 
 
-# 1. Checking for US ##########
+# 2. Checking for US ##########
 
 p.tvl.us <- df %>% filter(region == "United States") %>%   
   ggplot( ., aes(as.Date(date), value, color = transportation_type)) + geom_line() +
@@ -151,7 +151,7 @@ finalise_plot(p.tvl.usa, source_name = "Source: Apple Mobility Dataset",
               logo_image_path = "Data/logo/rk_logo.png")
 
 
-# Checking for World 
+# 3. Checking for World #
 p.tvl.wld <- df %>%   
   ggplot( ., aes(as.Date(date), value, color = transportation_type)) +
   geom_smooth() + scale_y_continuous(labels = function(x) paste0(x-100, "%"),  limits = c(0, 175)) +
