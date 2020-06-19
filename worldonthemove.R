@@ -1,6 +1,6 @@
 #World on the move
 
-# The aim to find out how different movement ways have changed across countries
+# The aim is to find out how different mobility patterns have changed across countries
 # We should have 3 different regions
 # World, UK, US 
 # p is for plot 
@@ -120,7 +120,7 @@ p.tvl.us <- df %>% filter(region == "United States") %>%
   scale_colour_brewer(palette = "Set2") +
   guides(color=guide_legend(override.aes=list(fill=NA))) 
 
-# Preety fy the graph
+# Preetyfy the graph
 p.tvl.us <- ggpretay(p.tvl.us, title = "US seems to be on the move too", 
                      subtitle = "Data suggests that Americans have started to travel again.
 Like in Britain, Americans are shunning public transport usage",
